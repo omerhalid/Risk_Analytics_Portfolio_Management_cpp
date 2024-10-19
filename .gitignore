@@ -1,0 +1,71 @@
+# Ignore build artifacts
+/build/
+/bin/
+/obj/
+/out/
+
+# Ignore Visual Studio Code settings
+.vscode/
+
+# Ignore .env file
+.env
+
+# Ignore compiled object files
+*.o
+*.obj
+*.lo
+*.la
+*.al
+*.libs
+*.dll
+*.so
+*.dylib
+*.exe
+*.out
+*.app
+
+# Ignore dependency directories
+/deps/
+/vendor/
+
+# Ignore CMake build files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Ignore Visual Studio files
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sln
+*.suo
+*.user
+*.userosscache
+*.userprefs
+*.ncb
+*.opensdf
+*.sdf
+*.ipch
+*.pdb
+*.opendb
+*.tlog
+*.lastbuildstate
+*.idb
+*.dir
+*.obj
+*.pch
+*.res
+*.rsp
+*.tlb
+*.tli
+*.tmp
+*.log
+*.vspscc
+*.vssscc
+*.cache
+*.ilk
+*.iobj
+*.ipdb
+*.pgc
+*.pgd
