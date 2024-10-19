@@ -35,7 +35,7 @@ void loadEnv() {
     envFile.close();
 }
 
-void parseMarketData(const std::string& jsonData, const std::string& symbol, std::unordered_map<std::string, std::vector<double>>& hashmap) 
+void parseMarketData(const std::string& jsonData, const std::string& symbol, std::unordered_map<std::string, std::vector<double>>& hashmap, std::unordered_map<std::string, std::vector<double>>& dailyReturn) 
 {
     std::vector<double> closePrices;
     try {
@@ -49,6 +49,13 @@ void parseMarketData(const std::string& jsonData, const std::string& symbol, std
 
         hashmap[symbol] = closePrices;
 
+        // daily returns
+        for(int i = 1; i < hashmap[symbol].size(); ++i)
+        {
+            double dailyReturnValue = (closePrices[i] - closePrices[i - 1]) / closePrices[i - 1];
+            dailyReturn[symbol].push_back(dailyReturnValue);
+        }
+
     } catch (const nlohmann::json::parse_error& e) {
         std::cerr << "JSON parse error: " << e.what() << std::endl;
     } catch (const nlohmann::json::type_error& e) {
@@ -56,7 +63,7 @@ void parseMarketData(const std::string& jsonData, const std::string& symbol, std
     }
 }
 
-void fetchMarketData(const std::string& apiKey, const std::string& symbol, std::unordered_map<std::string, std::vector<double>>& hashmap) {
+void fetchMarketData(const std::string& apiKey, const std::string& symbol, std::unordered_map<std::string, std::vector<double>>& hashmap, std::unordered_map<std::string, std::vector<double>>& dailyReturn) {
     CURL* curl;
     CURLcode res;
     std::string readBuffer;
@@ -80,14 +87,14 @@ void fetchMarketData(const std::string& apiKey, const std::string& symbol, std::
         std::cerr << "Failed to initialize cURL" << std::endl;
     }
 
-    parseMarketData(readBuffer, symbol, hashmap);
+    parseMarketData(readBuffer, symbol, hashmap, dailyReturn);
 }
 
 void logger(std::unordered_map<std::string, std::vector<double>>& hashmap, std::string& stockName)
 {
     if(hashmap.find(stockName) != hashmap.end())
         {
-            std::cout << "Last 100 days closing prices for " << stockName << ":\n";
+            std::cout << "Last 100 days for " << stockName << ":\n";
             const auto& prices = hashmap[stockName];
             for (int i = 0; i < prices.size(); ++i) 
             {
@@ -110,6 +117,9 @@ int main() {
         }
 
         std::unordered_map<std::string, std::vector<double>> hashmap; // should it be global?
+        hashmap.reserve(100);
+        std::unordered_map<std::string, std::vector<double>> dailyReturn;
+        dailyReturn.reserve(100);
 
         std::cout << "Which stock? :";
         std::cout << "\n";
@@ -117,10 +127,10 @@ int main() {
         std::cin >> stockName;
 
         std::cout << "Fetching market data for " << stockName << "...\n";
-        fetchMarketData(apiKey, stockName, hashmap);
+        fetchMarketData(apiKey, stockName, hashmap, dailyReturn);
         std::cout << "Market data fetched.\n";
 
-        //logger(hashmap, stockName);
+        logger(dailyReturn, stockName);
     }
     catch (const std::exception& e) 
     {
