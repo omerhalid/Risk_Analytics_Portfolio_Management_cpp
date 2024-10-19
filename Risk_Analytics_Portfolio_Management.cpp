@@ -145,6 +145,17 @@ void logger(std::unordered_map<std::string, std::vector<double>>& hashmap, std::
             throw std::invalid_argument("Wrong stock name");
 }
 
+double calculateVar(const std::vector<double>& portfolioReturns)
+{
+    constexpr double confidenceLevel = 0.95;
+
+    size_t index = static_cast<size_t>((1 - confidenceLevel) * portfolioReturns.size());
+
+    double var = portfolioReturns[index];
+
+    return var;
+}
+
 int main() {
     try {
         // Load environment variables
@@ -165,23 +176,24 @@ int main() {
             {"GOOGL", 0.3}  // 30% of the portfolio is invested in Google
         };
 
-        std::cout << "Which stock? :";
-        std::cout << "\n";
-        std::string stockName;
-        std::cin >> stockName;
+        // Fetch data for all stocks in the portfolio
+        for (const auto& [stockName, weight] : portfolioWeights) {
+            std::cout << "Fetching market data for " << stockName << "...\n";
+            fetchMarketData(apiKey, stockName, hashmap, dailyReturn);
+            std::cout << "Market data fetched for " << stockName << ".\n";
+        }
 
-        std::cout << "Fetching market data for " << stockName << "...\n";
-        fetchMarketData(apiKey, stockName, hashmap, dailyReturn);
-        std::cout << "Market data fetched.\n";
-
-        logger(dailyReturn, stockName);
-
+        // Calculate portfolio returns
         std::vector<double> portfolioReturns = calculatePortfolioReturns(dailyReturn, portfolioWeights);
 
-        std::cout << "Portfolio returns:\n";
-        for (size_t i = 0; i < portfolioReturns.size(); ++i) {
-            std::cout << "Day " << i + 1 << ": " << portfolioReturns[i] << "\n";
-        }
+        // Sort the portfolio returns
+        std::cout << "Sorting the returns..\n";
+        std::sort(portfolioReturns.begin(), portfolioReturns.end());
+        std::cout << "Sorted!\n";
+
+        // Calculate VaR
+        double var = calculateVar(portfolioReturns);
+        std::cout << "VaR = " << var << "\n";
     }
     catch (const std::exception& e) {
         std::cerr << "An error occurred: " << e.what() << std::endl;
