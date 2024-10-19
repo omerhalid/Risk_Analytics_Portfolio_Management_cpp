@@ -7,7 +7,13 @@
 #include "C:/Users/katka/source/market_data_handler/json/json.hpp"
 
 // Callback function to handle data received from cURL
-size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
+size_t WriteCallback(
+    void* contents, 
+    size_t size, 
+    size_t nmemb, 
+    void* userp) 
+    {
+
     ((std::string*)userp)->append((char*)contents, size * nmemb);
     return size * nmemb;
 }
@@ -35,8 +41,15 @@ void loadEnv() {
     envFile.close();
 }
 
-void parseMarketData(const std::string& jsonData, const std::string& symbol, std::unordered_map<std::string, std::vector<double>>& hashmap, std::unordered_map<std::string, std::vector<double>>& dailyReturn) 
+void parseMarketData(
+    const std::string& jsonData, 
+    const std::string& symbol, 
+    std::unordered_map<std::string, 
+    std::vector<double>>& hashmap, 
+    std::unordered_map<std::string, 
+    std::vector<double>>& dailyReturn) 
 {
+
     std::vector<double> closePrices;
     try {
         auto json = nlohmann::json::parse(jsonData);
@@ -63,7 +76,13 @@ void parseMarketData(const std::string& jsonData, const std::string& symbol, std
     }
 }
 
-void fetchMarketData(const std::string& apiKey, const std::string& symbol, std::unordered_map<std::string, std::vector<double>>& hashmap, std::unordered_map<std::string, std::vector<double>>& dailyReturn) {
+void fetchMarketData(
+    const std::string& apiKey, 
+    const std::string& symbol, 
+    std::unordered_map<std::string, std::vector<double>>& hashmap, 
+    std::unordered_map<std::string, std::vector<double>>& dailyReturn) 
+    {
+
     CURL* curl;
     CURLcode res;
     std::string readBuffer;
@@ -88,6 +107,27 @@ void fetchMarketData(const std::string& apiKey, const std::string& symbol, std::
     }
 
     parseMarketData(readBuffer, symbol, hashmap, dailyReturn);
+}
+
+std::vector<double> calculatePortfolioReturns(
+    const std::unordered_map<std::string, std::vector<double>>& dailyReturns,
+    const std::unordered_map<std::string, double>& portfolioWeights) 
+{
+    std::vector<double> portfolioReturns;
+    size_t numDays = dailyReturns.begin()->second.size();
+
+    for (size_t day = 0; day < numDays; ++day) 
+    {
+        double portfolioReturn = 0.0;
+
+        for (const auto& [symbol, returns] : dailyReturns) {
+            portfolioReturn += returns[day] * portfolioWeights.at(symbol);
+        }
+        portfolioReturns.push_back(portfolioReturn);
+    }
+
+    return portfolioReturns;    
+
 }
 
 void logger(std::unordered_map<std::string, std::vector<double>>& hashmap, std::string& stockName)
@@ -116,10 +156,14 @@ int main() {
             return 1;
         }
 
-        std::unordered_map<std::string, std::vector<double>> hashmap; // should it be global?
-        hashmap.reserve(100);
+        std::unordered_map<std::string, std::vector<double>> hashmap;
         std::unordered_map<std::string, std::vector<double>> dailyReturn;
-        dailyReturn.reserve(100);
+
+        std::unordered_map<std::string, double> portfolioWeights = {
+            {"AAPL", 0.4},  // 40% of the portfolio is invested in Apple
+            {"MSFT", 0.3},  // 30% of the portfolio is invested in Microsoft
+            {"GOOGL", 0.3}  // 30% of the portfolio is invested in Google
+        };
 
         std::cout << "Which stock? :";
         std::cout << "\n";
@@ -131,14 +175,19 @@ int main() {
         std::cout << "Market data fetched.\n";
 
         logger(dailyReturn, stockName);
+
+        std::vector<double> portfolioReturns = calculatePortfolioReturns(dailyReturn, portfolioWeights);
+
+        std::cout << "Portfolio returns:\n";
+        for (size_t i = 0; i < portfolioReturns.size(); ++i) {
+            std::cout << "Day " << i + 1 << ": " << portfolioReturns[i] << "\n";
+        }
     }
-    catch (const std::exception& e) 
-    {
+    catch (const std::exception& e) {
         std::cerr << "An error occurred: " << e.what() << std::endl;
         return 1;
-    } 
-    catch (...) 
-    {
+    }
+    catch (...) {
         std::cerr << "An unknown error occurred." << std::endl;
         return 1;
     }
