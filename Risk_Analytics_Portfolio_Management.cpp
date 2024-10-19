@@ -35,7 +35,28 @@ void loadEnv() {
     envFile.close();
 }
 
-std::string fetchMarketData(const std::string& apiKey, const std::string& symbol) {
+void parseMarketData(const std::string& jsonData, const std::string& symbol, std::unordered_map<std::string, std::vector<double>>& hashmap) 
+{
+    std::vector<double> closePrices;
+    try {
+        auto json = nlohmann::json::parse(jsonData);
+        std::cout << "Processing market data...\n";
+        
+        for (auto& [timestamp, data] : json["Time Series (Daily)"].items()) {
+            double closePrice = std::stod(data["4. close"].get<std::string>());
+            closePrices.push_back(closePrice);
+        }
+
+        hashmap[symbol] = closePrices;
+
+    } catch (const nlohmann::json::parse_error& e) {
+        std::cerr << "JSON parse error: " << e.what() << std::endl;
+    } catch (const nlohmann::json::type_error& e) {
+        std::cerr << "JSON type error: " << e.what() << std::endl;
+    }
+}
+
+void fetchMarketData(const std::string& apiKey, const std::string& symbol, std::unordered_map<std::string, std::vector<double>>& hashmap) {
     CURL* curl;
     CURLcode res;
     std::string readBuffer;
@@ -59,30 +80,22 @@ std::string fetchMarketData(const std::string& apiKey, const std::string& symbol
         std::cerr << "Failed to initialize cURL" << std::endl;
     }
 
-    // Print the response for debugging
-    std::cout << "Response: " << readBuffer << std::endl;
-
-    return readBuffer;
+    parseMarketData(readBuffer, symbol, hashmap);
 }
 
-std::vector<double> parseMarketData(const std::string& jsonData) {
-    std::unordered_map<std::string, int> hashmap;
-    std::vector<double> closePrices;
-    try {
-        auto json = nlohmann::json::parse(jsonData);
-        std::cout << "Processing market data...\n";
-        
-        for (auto& [timestamp, data] : json["Time Series (Daily)"].items()) {
-            double closePrice = std::stod(data["4. close"].get<std::string>());
-            closePrices.push_back(closePrice);
+void logger(std::unordered_map<std::string, std::vector<double>>& hashmap, std::string& stockName)
+{
+    if(hashmap.find(stockName) != hashmap.end())
+        {
+            std::cout << "Last 100 days closing prices for " << stockName << ":\n";
+            const auto& prices = hashmap[stockName];
+            for (int i = 0; i < prices.size(); ++i) 
+            {
+                std::cout << "Day " << i + 1 << ": " << hashmap[stockName][i] << "\n";
+            }
         }
-
-    } catch (const nlohmann::json::parse_error& e) {
-        std::cerr << "JSON parse error: " << e.what() << std::endl;
-    } catch (const nlohmann::json::type_error& e) {
-        std::cerr << "JSON type error: " << e.what() << std::endl;
-    }
-    return closePrices;
+        else
+            throw std::invalid_argument("Wrong stock name");
 }
 
 int main() {
@@ -96,24 +109,26 @@ int main() {
             return 1;
         }
 
+        std::unordered_map<std::string, std::vector<double>> hashmap; // should it be global?
+
         std::cout << "Which stock? :";
         std::cout << "\n";
         std::string stockName;
         std::cin >> stockName;
 
         std::cout << "Fetching market data for " << stockName << "...\n";
-        std::string response = fetchMarketData(apiKey, stockName);
-        std::cout << "Market data fetched. Parsing data...\n";
-        std::vector<double> closingPrices = parseMarketData(response);
+        fetchMarketData(apiKey, stockName, hashmap);
+        std::cout << "Market data fetched.\n";
 
-        std::cout << "Last 100 days closing prices for " << stockName << ":\n";
-        for (size_t i = 0; i < closingPrices.size(); ++i) {
-            std::cout << "Day " << i + 1 << ": " << closingPrices[i] << "\n";
-        }
-    } catch (const std::exception& e) {
+        //logger(hashmap, stockName);
+    }
+    catch (const std::exception& e) 
+    {
         std::cerr << "An error occurred: " << e.what() << std::endl;
         return 1;
-    } catch (...) {
+    } 
+    catch (...) 
+    {
         std::cerr << "An unknown error occurred." << std::endl;
         return 1;
     }
