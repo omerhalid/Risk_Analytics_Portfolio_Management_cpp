@@ -66,8 +66,8 @@ void Portfolio::printResult(const Portfolio& portfolio)
               << -var << " in a given day. Conversely, there is a 5% chance that the portfolio could lose more than this amount.\n";
 }
 
-// integrate it in main.cpp
-double calculateCVar(const std::vector<double>& portfolioReturns, double confidenceLevel)
+// TODO: integrate it
+double Portfolio::calculateCVar(const std::vector<double>& portfolioReturns, double confidenceLevel)
 {
     size_t index = static_cast<size_t>((1 - confidenceLevel) * portfolioReturns.size());
     double sum = 0.0;
