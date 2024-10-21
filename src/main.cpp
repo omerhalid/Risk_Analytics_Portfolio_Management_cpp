@@ -13,7 +13,7 @@ void loadEnv() {
 
     std::string line;
     while (std::getline(envFile, line)) {
-        std::istringstream lineStream(line);  // Correct usage
+        std::istringstream lineStream(line);
         std::string key;
         if (std::getline(lineStream, key, '=')) {
             std::string value;
