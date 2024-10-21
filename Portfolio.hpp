@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <vector>
 #include <string>
+#include <iostream>
 
 class Portfolio {
 public:
@@ -12,6 +13,9 @@ public:
     void addDailyReturns(const std::string& symbol, const std::vector<double>& returns);
     std::vector<double> calculatePortfolioReturns() const;
     double calculateVaR(double confidenceLevel) const;
+
+    static std::unordered_map<std::string, double> portfolioSelector();
+    static void printResult(const Portfolio& portfolio);
 
 private:
     std::unordered_map<std::string, double> weights;

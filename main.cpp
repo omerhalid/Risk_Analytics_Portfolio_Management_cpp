@@ -1,7 +1,6 @@
 #include <iostream>
 #include <fstream>
-#include <unordered_map>
-#include <sstream>  // Add this header
+#include <sstream>
 #include "MarketDataHandler.hpp"
 #include "Portfolio.hpp"
 
@@ -40,11 +39,7 @@ int main() {
 
         MarketDataHandler marketDataHandler(apiKey);
 
-        std::unordered_map<std::string, double> portfolioWeights = {
-            {"AAPL", 0.4},  // 40% of the portfolio is invested in Apple
-            {"MSFT", 0.3},  // 30% of the portfolio is invested in Microsoft
-            {"GOOGL", 0.3}  // 30% of the portfolio is invested in Google
-        };
+        std::unordered_map<std::string, double> portfolioWeights = Portfolio::portfolioSelector();
 
         Portfolio portfolio(portfolioWeights);
 
@@ -60,8 +55,7 @@ int main() {
         }
 
         // Calculate VaR
-        double var = portfolio.calculateVaR(0.95);
-        std::cout << "VaR = " << var << "\n";
+        Portfolio::printResult(portfolio);
     }
     catch (const std::exception& e) {
         std::cerr << "An error occurred: " << e.what() << std::endl;

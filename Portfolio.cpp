@@ -30,6 +30,42 @@ double Portfolio::calculateVaR(double confidenceLevel) const {
     return portfolioReturns[index]; // it might be benefical to return -var since VaR is typically a negative number (representing a loss)
 }
 
+std::unordered_map<std::string, double> Portfolio::portfolioSelector() {
+    std::unordered_map<std::string, double> portfolioWeights;
+    std::cout << "Welcome to the Portfolio Selector!" << std::endl;
+    std::cout << "Please enter the number of stocks in your portfolio: ";
+    int numStocks;
+    std::cin >> numStocks;
+
+    for (int i = 0; i < numStocks; ++i) {
+        std::string stockSymbol;
+        double weight;
+
+        std::cout << "Enter stock symbol #" << (i + 1) << ": ";
+        std::cin >> stockSymbol;
+
+        std::cout << "Enter weight for " << stockSymbol << " (as a decimal, e.g., 0.4 for 40%): ";
+        std::cin >> weight;
+
+        portfolioWeights[stockSymbol] = weight;
+    }
+
+    std::cout << "\nYour portfolio weights are:" << std::endl;
+    for (const auto& pair : portfolioWeights) {
+        std::cout << pair.first << ": " << pair.second * 100 << "%" << std::endl;
+    }
+
+    return portfolioWeights;
+}
+
+void Portfolio::printResult(const Portfolio& portfolio)
+{
+    double var = portfolio.calculateVaR(0.95);
+    std::cout << "VaR = " << var << "\n";
+    std::cout << "The Value at Risk (VaR) at a 95% confidence level means that there is a 95% chance that the portfolio will not lose more than " 
+              << -var << " in a given day. Conversely, there is a 5% chance that the portfolio could lose more than this amount.\n";
+}
+
 // integrate it in main.cpp
 double calculateCVar(const std::vector<double>& portfolioReturns, double confidenceLevel)
 {
